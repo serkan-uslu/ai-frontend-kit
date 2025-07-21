@@ -1,41 +1,24 @@
-import { GoogleGenAI } from "@google/genai";
 import { AIResponse, ThinkingCallback, AIResponseOptions } from "./types";
-import {
-  API_CONFIG,
-  ERROR_MESSAGES,
-  GEMINI_MODEL_MAPPING,
-} from "@/config/ai-config";
+import { API_CONFIG, ERROR_MESSAGES } from "@/config/ai-config";
+import { callAIAPI } from "./api-client";
 
 /**
- * Gemini AI client
- * Uses a lazy initialization pattern to only create the client when needed
+ * Legacy compatibility layer for the AI client
+ * Now uses the secure API client instead of direct AI service access
  */
-let aiClient: GoogleGenAI | null = null;
 
-const getAIClient = (): GoogleGenAI => {
-  if (!aiClient) {
-    // For Next.js, we need to use NEXT_PUBLIC_ prefixed env variables for client-side access
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
-    if (!apiKey) {
-      console.error(ERROR_MESSAGES.MISSING_API_KEY("Gemini"));
-      throw new Error(ERROR_MESSAGES.MISSING_API_KEY("Gemini"));
-    }
-    aiClient = new GoogleGenAI({ apiKey });
-  }
-  return aiClient;
+// No longer needed as we're using the API client
+// This is kept as a comment for reference
+const getAIClient = () => {
+  throw new Error("This function should not be called anymore");
 };
 
-/**
- * Map custom model IDs to actual Gemini model names
- * @param modelId - The custom model ID to map
- * @returns The actual Gemini model name
- */
-const getGeminiModelName = (modelId: string): string => {
-  return GEMINI_MODEL_MAPPING[modelId] || GEMINI_MODEL_MAPPING.default;
-};
+// Model mapping is now handled server-side
+// This is kept as a comment for reference
+// const getGeminiModelName = (modelId: string): string => {};
 
 /**
- * Gemini specific response generation with enhanced error handling
+ * Gemini specific response generation using the secure API client
  * @param userMessage - The user's message to process
  * @param modelId - The model ID to use
  * @param enableThinking - Whether to enable thinking mode
@@ -49,111 +32,17 @@ export async function generateGeminiResponse(
   onThinking?: ThinkingCallback,
 ): Promise<AIResponse> {
   try {
-    // Initialize AI client
-    const ai = getAIClient();
+    // Call the secure API client
+    // Pass the onThinking callback directly to the API client for streaming updates
+    const response = await callAIAPI(userMessage, "gemini", modelId, {
+      thinkingEnabled: enableThinking,
+      onThinking: onThinking,
+    });
 
-    // Map our custom model ID to actual Gemini model name
-    const actualModelName = getGeminiModelName(modelId);
+    // No need to call onThinking here as it's now handled by the streaming API
+    // The API client will call onThinking as thinking updates arrive
 
-    // Use streaming API to get real-time thinking content
-    if (enableThinking) {
-      let accumulatedThoughts = "";
-      let accumulatedAnswer = "";
-
-      try {
-        // Use the streaming API to get real-time thinking content
-        const streamResponse = await ai.models.generateContentStream({
-          model: actualModelName,
-          contents: userMessage,
-          config: {
-            thinkingConfig: {
-              thinkingBudget: enableThinking ? undefined : 0,
-              includeThoughts: true,
-            },
-          },
-        });
-
-        // Process the stream chunks
-        for await (const chunk of streamResponse) {
-          if (
-            chunk.candidates &&
-            chunk.candidates.length > 0 &&
-            chunk.candidates[0].content &&
-            chunk.candidates[0].content.parts
-          ) {
-            for (const part of chunk.candidates[0].content.parts) {
-              if (!part.text) {
-                continue;
-              } else if (part.thought) {
-                // This is a thinking part
-                accumulatedThoughts += part.text;
-                if (onThinking) {
-                  onThinking(accumulatedThoughts);
-                }
-              } else {
-                // This is the answer part
-                accumulatedAnswer += part.text;
-              }
-            }
-          }
-        }
-
-        // Return the accumulated thoughts and answer
-        return {
-          text: accumulatedAnswer || ERROR_MESSAGES.NO_RESPONSE,
-          thinking: accumulatedThoughts,
-        };
-      } catch (error) {
-        console.error("Error in streaming response:", error);
-        // Log the error but continue to fallback method
-        // Don't expose internal error details to the user
-      }
-    }
-
-    // Generate the response using non-streaming API (fallback or when thinking is disabled)
-    try {
-      const response = await ai.models.generateContent({
-        model: actualModelName,
-        contents: userMessage,
-        config: {
-          thinkingConfig: {
-            thinkingBudget: enableThinking ? undefined : 0,
-            includeThoughts: enableThinking,
-          },
-        },
-      });
-
-      // Extract thinking content and final answer
-      let thinking = "";
-      let finalAnswer = "";
-
-      if (response.candidates && response.candidates[0]?.content?.parts) {
-        for (const part of response.candidates[0].content.parts) {
-          if (!part.text) {
-            continue;
-          } else if (part.thought) {
-            thinking += part.text + "\n\n";
-          } else {
-            finalAnswer += part.text;
-          }
-        }
-      }
-
-      return {
-        text: finalAnswer || response.text || ERROR_MESSAGES.NO_RESPONSE,
-        thinking: thinking.trim() || undefined,
-      };
-    } catch (error) {
-      // Handle specific error types
-      const err = error as Error;
-      console.error("Error generating Gemini AI response:", err);
-
-      // Return user-friendly error message
-      return {
-        text: ERROR_MESSAGES.GENERAL_ERROR,
-        error: "api_error",
-      };
-    }
+    return response;
   } catch (error) {
     // Catch any unexpected errors
     console.error("Unexpected error in Gemini response generation:", error);
@@ -179,30 +68,8 @@ export async function generateAIResponse(
   options: AIResponseOptions = {},
 ): Promise<AIResponse> {
   try {
-    switch (provider.toLowerCase()) {
-      case "gemini":
-        return generateGeminiResponse(
-          userMessage,
-          model,
-          options.thinkingEnabled,
-          options.onThinking,
-        );
-      case "openai":
-        return {
-          text: ERROR_MESSAGES.PROVIDER_NOT_IMPLEMENTED("OpenAI"),
-          error: "not_implemented",
-        };
-      case "claude":
-        return {
-          text: ERROR_MESSAGES.PROVIDER_NOT_IMPLEMENTED("Claude"),
-          error: "not_implemented",
-        };
-      default:
-        return {
-          text: ERROR_MESSAGES.UNKNOWN_PROVIDER,
-          error: "unknown_provider",
-        };
-    }
+    // Use the secure API client for all providers
+    return await callAIAPI(userMessage, provider, model, options);
   } catch (error) {
     console.error("Error in generateAIResponse:", error);
     return {

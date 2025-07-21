@@ -5,6 +5,8 @@ import { Suspense, isValidElement, memo, useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
+// Import rehype-sanitize for XSS protection
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 
 const DEFAULT_PRE_BLOCK_CLASS =
   "my-4 overflow-x-auto w-fit rounded-xl bg-zinc-950 text-zinc-50 dark:bg-zinc-900 border border-border p-4";
@@ -307,7 +309,26 @@ const MemoizedMarkdownBlock = memo(
   ({ content, className }: MarkdownBlockProps) => {
     return (
       <div className={className}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[
+            () =>
+              rehypeSanitize({
+                ...defaultSchema,
+                // Allow custom attributes that are safe
+                attributes: {
+                  ...defaultSchema.attributes,
+                  // Example of allowing specific safe attributes for code blocks
+                  code: [
+                    ...(defaultSchema.attributes?.code || []),
+                    "className",
+                    "data-language",
+                  ],
+                },
+              }),
+          ]}
+          components={components}
+        >
           {content}
         </ReactMarkdown>
       </div>
