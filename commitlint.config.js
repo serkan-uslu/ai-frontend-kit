@@ -5,17 +5,17 @@ module.exports = {
       2,
       "always",
       [
-        "feat", // Yeni özellik
-        "fix", // Bug fix
-        "docs", // Dokümantasyon değişikliği
-        "style", // Kod formatı değişikliği
-        "refactor", // Kod refaktörü
-        "perf", // Performans iyileştirmesi
-        "test", // Test ekleme/değiştirme
-        "build", // Build sistemi değişikliği
-        "ci", // CI konfigürasyon değişikliği
-        "chore", // Diğer değişiklikler
-        "revert", // Geri alma
+        "feat", // add new feature
+        "fix", // bug fix
+        "docs", // documentation
+        "style", // code style
+        "refactor", // refactor
+        "perf", // performance
+        "test", // test
+        "build", // build
+        "ci", // CI configuration
+        "chore", // other changes
+        "revert", // revert
       ],
     ],
     "subject-case": [2, "never", ["upper-case"]],
