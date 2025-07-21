@@ -98,22 +98,3 @@ export async function generateChatResponse(
  * Test function for the Gemini API
  * @returns Promise<void>
  */
-async function testGeminiAPI(): Promise<void> {
-  try {
-    const ai = getAIClient();
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: "How does AI work?",
-      config: {
-        thinkingConfig: {
-          thinkingBudget: 0, // Disables thinking
-        },
-      },
-    });
-    console.log("Test response:", response.text);
-  } catch (error) {
-    console.error("Test failed:", error);
-  }
-}
-
-export { testGeminiAPI };
