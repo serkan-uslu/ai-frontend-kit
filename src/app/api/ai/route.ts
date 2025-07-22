@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       provider,
       modelId,
       enableThinking = true,
+      history = [],
     } = await req.json();
 
     // Validate request
@@ -86,10 +87,15 @@ export async function POST(req: NextRequest) {
             async start(controller) {
               try {
                 if (enableThinking) {
-                  // Use streaming API for thinking content
-                  const streamResponse = await ai.models.generateContentStream({
+                  // Create a chat with history if provided
+                  const chat = ai.chats.create({
                     model: actualModelName,
-                    contents: userMessage,
+                    history: history.length > 0 ? history : undefined,
+                  });
+
+                  // Use streaming API for thinking content
+                  const streamResponse = await chat.sendMessageStream({
+                    message: userMessage,
                     config: {
                       thinkingConfig: {
                         includeThoughts: true,
@@ -130,18 +136,37 @@ export async function POST(req: NextRequest) {
                     }
                   }
 
-                  // Send the final answer
+                  // Count tokens for the response
+                  let tokenCount = 0;
+                  try {
+                    const countResponse = await ai.models.countTokens({
+                      model: actualModelName,
+                      contents: userMessage,
+                    });
+                    tokenCount = countResponse.totalTokens || 0;
+                  } catch (error) {
+                    console.error("Error counting tokens:", error);
+                  }
+
+                  // Send the final answer with token count
                   const finalData = JSON.stringify({
                     type: "final",
                     content: accumulatedAnswer || ERROR_MESSAGES.NO_RESPONSE,
                     thinking: accumulatedThoughts,
+                    tokenCount: tokenCount,
                   });
                   controller.enqueue(encoder.encode(`data: ${finalData}\n\n`));
                 } else {
                   // Non-streaming API when thinking is disabled
-                  const response = await ai.models.generateContent({
+                  // Create a chat with history if provided
+                  const chat = ai.chats.create({
                     model: actualModelName,
-                    contents: userMessage,
+                    history: history.length > 0 ? history : undefined,
+                  });
+
+                  // Send message without streaming
+                  const response = await chat.sendMessage({
+                    message: userMessage,
                     config: {
                       thinkingConfig: {
                         thinkingBudget: 0,
@@ -150,10 +175,23 @@ export async function POST(req: NextRequest) {
                     },
                   });
 
-                  // Send the final answer
+                  // Count tokens for the response
+                  let tokenCount = 0;
+                  try {
+                    const countResponse = await ai.models.countTokens({
+                      model: actualModelName,
+                      contents: userMessage,
+                    });
+                    tokenCount = countResponse.totalTokens || 0;
+                  } catch (error) {
+                    console.error("Error counting tokens:", error);
+                  }
+
+                  // Send the final answer with token count
                   const finalData = JSON.stringify({
                     type: "final",
                     content: response.text || ERROR_MESSAGES.NO_RESPONSE,
+                    tokenCount: tokenCount,
                   });
                   controller.enqueue(encoder.encode(`data: ${finalData}\n\n`));
                 }

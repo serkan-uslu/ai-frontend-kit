@@ -25,7 +25,22 @@ export default function FeaturesPage() {
           <h1 className="text-3xl font-bold text-foreground mb-6">Features</h1>
 
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Feature 1 */}
+            {/* Feature 1 - Chat History */}
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm border border-border/40">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-md">
+                  <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="font-medium">Chat History Support</h3>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Seamless multi-turn conversations with context retention. The AI
+                remembers previous messages in your conversation for more
+                coherent and contextual responses.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
             <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-sm border border-border/40">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-md">

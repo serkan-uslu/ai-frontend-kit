@@ -1,6 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -14,11 +15,20 @@ import {
 } from "@/config/ai-config";
 import { generateAIResponse } from "@/lib/gemini";
 import { AIModel, Message } from "@/lib/types";
-import { Bot, Brain, MessageSquare, Scale, Sparkles, Zap } from "lucide-react";
+import {
+  Bot,
+  Brain,
+  MessageSquare,
+  Network,
+  Scale,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { useState } from "react";
 import { ChatInput } from "./chat-input";
 import { ChatMessageArea } from "./chat-message-area";
+import { ChatFlowView } from "./chat-flow-view";
 
 // Helper function to get icon component for providers
 const getProviderIcon = (providerName: string) => {
@@ -53,6 +63,7 @@ export function ChatContainer() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState("Google Gemini");
   const [selectedModelId, setSelectedModelId] = useState("gemini-2.5-flash");
+  const [viewMode, setViewMode] = useState<"chat" | "flow">("chat");
 
   const currentProvider =
     AI_PROVIDERS.find((p) => p.name === selectedProvider) || AI_PROVIDERS[0];
@@ -96,6 +107,12 @@ export function ChatContainer() {
 
     setMessages((prev) => [...prev, userMessage]);
 
+    // Convert previous messages to chat history format for Gemini API
+    const chatHistory = messages.map((msg) => ({
+      role: msg.isUser ? "user" : ("model" as "user" | "model"),
+      parts: [{ text: msg.content }],
+    }));
+
     // Check if thinking is enabled for the current model
     const isThinkingEnabled = currentModel?.thinkingEnabled === true;
     let thinkingMessageId: string | undefined;
@@ -124,13 +141,15 @@ export function ChatContainer() {
     };
 
     try {
+      // Generate AI response
       const response = await generateAIResponse(
         content,
-        currentModel?.provider || "gemini",
-        selectedModelId,
+        "gemini", // Use the exact provider ID expected by the API
+        currentModel.id,
         {
-          thinkingEnabled: currentModel?.thinkingEnabled,
-          onThinking: isThinkingEnabled ? handleThinking : undefined,
+          thinkingEnabled: isThinkingEnabled,
+          onThinking: handleThinking,
+          history: chatHistory,
         },
       );
 
@@ -138,7 +157,11 @@ export function ChatContainer() {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === thinkingMessageId
-              ? { ...m, finalAnswer: response.text }
+              ? {
+                  ...m,
+                  finalAnswer: response.text,
+                  tokenCount: response.tokenCount,
+                }
               : m,
           ),
         );
@@ -149,6 +172,7 @@ export function ChatContainer() {
           content: response.text,
           isUser: false,
           timestamp: new Date().toLocaleTimeString(),
+          tokenCount: response.tokenCount,
         };
 
         setMessages((prev) => [...prev, aiMessage]);
@@ -271,6 +295,42 @@ export function ChatContainer() {
               <span className="text-sm text-muted-foreground">Ready</span>
             </div>
 
+            {/* View Toggle Button */}
+            {/* <Button
+              variant="outline"
+              size="icon"
+              className="ml-2"
+              onClick={() => setViewMode(viewMode === "chat" ? "flow" : "chat")}
+              title={viewMode === "chat" ? "Switch to Flow View" : "Switch to Chat View"}
+            >
+              {viewMode === "chat" ? <Network className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+            </Button> */}
+
+            {/* GitHub Link */}
+            <a
+              href="https://github.com/serkan-uslu/ai-frontend-kit"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+              title="View on GitHub"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-github"
+              >
+                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+                <path d="M9 18c-4.51 2-5-2-7-2" />
+              </svg>
+            </a>
+
             {/* Theme Toggle */}
             <div className="ml-2">
               <ThemeToggle />
@@ -279,17 +339,24 @@ export function ChatContainer() {
         </div>
       </div>
 
-      <ChatMessageArea messages={messages} isLoading={isLoading} />
+      {viewMode === "chat" ? (
+        <>
+          <ChatMessageArea messages={messages} isLoading={isLoading} />
 
-      <ChatInput
-        onSend={handleSendMessage}
-        disabled={isLoading || selectedModelId === "coming-soon"}
-        placeholder={
-          selectedModelId === "coming-soon"
-            ? `${selectedProvider} integration coming soon...`
-            : `Ask me anything...`
-        }
-      />
+          <ChatInput
+            onSend={handleSendMessage}
+            disabled={selectedModelId === "coming-soon"}
+            isLoading={isLoading}
+            placeholder={
+              selectedModelId === "coming-soon"
+                ? `${selectedProvider} integration coming soon...`
+                : `Ask me anything...`
+            }
+          />
+        </>
+      ) : (
+        <ChatFlowView messages={messages} />
+      )}
     </Card>
   );
 }

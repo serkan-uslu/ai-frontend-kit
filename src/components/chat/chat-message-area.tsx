@@ -73,6 +73,7 @@ export function ChatMessageArea({
                 timestamp={message.timestamp}
                 isThinking={message.isThinking}
                 finalAnswer={message.finalAnswer}
+                tokenCount={message.tokenCount}
               />
             ))}
             {isLoading && <TypingIndicator />}

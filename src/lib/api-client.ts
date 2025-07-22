@@ -16,6 +16,7 @@ export async function callAIAPI(
   options: AIResponseOptions = {},
 ): Promise<AIResponse> {
   try {
+    console.log(options.history);
     // Call our secure server-side API
     const response = await fetch("/api/ai", {
       method: "POST",
@@ -27,6 +28,7 @@ export async function callAIAPI(
         provider,
         modelId: model,
         enableThinking: options.thinkingEnabled,
+        history: options.history || [],
       }),
     });
 
@@ -60,6 +62,7 @@ export async function callAIAPI(
 
       let finalText = "";
       let finalThinking = "";
+      let finalTokenCount: number | undefined;
 
       // Process the stream and call the thinking callback as data arrives
       try {
@@ -87,6 +90,10 @@ export async function callAIAPI(
                   if (jsonData.thinking) {
                     finalThinking = jsonData.thinking;
                   }
+                  // Extract token count if available
+                  if (jsonData.tokenCount !== undefined) {
+                    finalTokenCount = jsonData.tokenCount;
+                  }
                 } else if (jsonData.type === "error") {
                   // Error in stream
                   finalText = jsonData.content;
@@ -104,6 +111,7 @@ export async function callAIAPI(
       return {
         text: finalText || ERROR_MESSAGES.NO_RESPONSE,
         thinking: finalThinking || undefined,
+        tokenCount: finalTokenCount,
       };
     } else {
       // Handle regular JSON response (fallback)
@@ -111,6 +119,7 @@ export async function callAIAPI(
       return {
         text: data.text || ERROR_MESSAGES.NO_RESPONSE,
         thinking: data.thinking,
+        tokenCount: data.tokenCount,
       };
     }
   } catch (error) {

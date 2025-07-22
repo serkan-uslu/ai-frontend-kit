@@ -1,4 +1,9 @@
-import { AIResponse, ThinkingCallback, AIResponseOptions } from "./types";
+import {
+  AIResponse,
+  ThinkingCallback,
+  AIResponseOptions,
+  ChatHistoryEntry,
+} from "./types";
 import { API_CONFIG, ERROR_MESSAGES } from "@/config/ai-config";
 import { callAIAPI } from "./api-client";
 
@@ -30,6 +35,7 @@ export async function generateGeminiResponse(
   modelId: string,
   enableThinking: boolean = true,
   onThinking?: ThinkingCallback,
+  history?: ChatHistoryEntry[],
 ): Promise<AIResponse> {
   try {
     // Call the secure API client
@@ -37,6 +43,7 @@ export async function generateGeminiResponse(
     const response = await callAIAPI(userMessage, "gemini", modelId, {
       thinkingEnabled: enableThinking,
       onThinking: onThinking,
+      history: history,
     });
 
     // No need to call onThinking here as it's now handled by the streaming API

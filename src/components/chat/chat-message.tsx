@@ -13,6 +13,7 @@ interface ChatMessageProps {
   timestamp?: string;
   isThinking?: boolean;
   finalAnswer?: string;
+  tokenCount?: number;
 }
 
 export function ChatMessage({
@@ -21,6 +22,7 @@ export function ChatMessage({
   timestamp,
   isThinking = false,
   finalAnswer,
+  tokenCount,
 }: ChatMessageProps) {
   // Always start collapsed if there's a final answer
   const [isCollapsed, setIsCollapsed] = useState(!!finalAnswer);
@@ -107,20 +109,52 @@ export function ChatMessage({
             )}
           </div>
 
-          {timestamp && (
-            <div
-              className={cn(
-                "text-xs mt-2 opacity-70",
-                isUser
-                  ? "text-primary-foreground/70"
-                  : isThinking
+          <div className="flex justify-between items-center mt-2">
+            {timestamp && (
+              <div
+                className={cn(
+                  "text-xs opacity-70",
+                  isUser
+                    ? "text-primary-foreground/70"
+                    : isThinking
+                      ? "text-amber-700/70 dark:text-amber-400/70"
+                      : "text-muted-foreground",
+                )}
+              >
+                {timestamp}
+              </div>
+            )}
+
+            {!isUser && tokenCount !== undefined && (
+              <div
+                className={cn(
+                  "text-xs opacity-70 ml-auto flex items-center gap-1",
+                  isThinking
                     ? "text-amber-700/70 dark:text-amber-400/70"
                     : "text-muted-foreground",
-              )}
-            >
-              {timestamp}
-            </div>
-          )}
+                )}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-coins"
+                >
+                  <circle cx="8" cy="8" r="6" />
+                  <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
+                  <path d="M7 6h1v4" />
+                  <path d="m16.71 13.88.7.71-2.82 2.82" />
+                </svg>
+                {tokenCount} tokens
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

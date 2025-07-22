@@ -27,6 +27,7 @@ export interface AIResponse {
   text: string;
   thinking?: string;
   error?: string;
+  tokenCount?: number;
 }
 
 /**
@@ -44,6 +45,15 @@ export interface Message {
   timestamp: string;
   isThinking?: boolean;
   finalAnswer?: string;
+  tokenCount?: number;
+}
+
+/**
+ * Chat message history entry
+ */
+export interface ChatHistoryEntry {
+  role: "user" | "model";
+  parts: { text: string }[];
 }
 
 /**
@@ -54,6 +64,7 @@ export interface AIResponseOptions {
   onThinking?: ThinkingCallback;
   temperature?: number;
   maxTokens?: number;
+  history?: ChatHistoryEntry[];
 }
 
 /**
