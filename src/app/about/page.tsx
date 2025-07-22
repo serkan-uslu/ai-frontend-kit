@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function AboutPage() {
   return (
@@ -22,8 +22,8 @@ export default function AboutPage() {
             <p className="text-lg mb-4">
               AI Frontend Kit is a modern, customizable chat interface built for
               AI applications. It provides a ready-to-use boilerplate for
-              integrating various AI models, with a focus on Google&apos;s
-              Gemini API.
+              integrating various AI models. Currently it supports Google&apos;s
+              Gemini API, with more providers planned to be added in the future.
             </p>
 
             <h2 className="text-xl font-semibold mt-8 mb-4">Purpose</h2>
