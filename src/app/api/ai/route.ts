@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
 import { ERROR_MESSAGES, GEMINI_MODEL_MAPPING } from "@/config/ai-config";
+import { captionImageWithGemini } from "@/lib/gemini";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { GoogleGenAI, Modality } from "@google/genai";
+import { NextRequest, NextResponse } from "next/server";
 
 // Server-side AI client
 let aiClient: GoogleGenAI | null = null;
@@ -61,6 +62,11 @@ export async function POST(req: NextRequest) {
       modelId,
       enableThinking = true,
       history = [],
+      generateImage = false,
+      editImage = false,
+      captionImage = false,
+      imageData = null,
+      mimeType = null,
     } = await req.json();
 
     // Validate request
@@ -75,6 +81,163 @@ export async function POST(req: NextRequest) {
     switch (provider?.toLowerCase()) {
       case "gemini":
         try {
+          // Handle image captioning/understanding request
+          if (captionImage && imageData) {
+            try {
+              const result = await captionImageWithGemini(
+                imageData,
+                mimeType || "image/jpeg",
+                userMessage,
+              );
+              return NextResponse.json({
+                text: result.text,
+              });
+            } catch (error) {
+              console.error("Error captioning image with Gemini:", error);
+              return NextResponse.json(
+                { error: "Failed to caption image" },
+                { status: 500 },
+              );
+            }
+          }
+
+          // Handle image editing if requested
+          if (editImage && imageData) {
+            try {
+              // Initialize AI client
+              const ai = getServerAIClient();
+
+              // Use the image generation model
+              const imageGenModel = "gemini-2.0-flash-preview-image-generation";
+
+              // Prepare content parts for image editing
+              const contents = [
+                { text: userMessage },
+                {
+                  inlineData: {
+                    mimeType: mimeType || "image/jpeg",
+                    data: imageData.replace(/^data:image\/\w+;base64,/, ""), // Remove data URI prefix if present
+                  },
+                },
+              ];
+
+              // Generate edited image content
+              const response = await ai.models.generateContent({
+                model: imageGenModel,
+                contents: contents,
+                config: {
+                  responseModalities: [Modality.TEXT, Modality.IMAGE],
+                },
+              });
+
+              // Extract image data
+              let editedImageData = null;
+              let responseText = "";
+
+              if (
+                response.candidates &&
+                response.candidates.length > 0 &&
+                response.candidates[0].content &&
+                response.candidates[0].content.parts
+              ) {
+                for (const part of response.candidates[0].content.parts) {
+                  if (part.text) {
+                    responseText += part.text;
+                  } else if (part.inlineData) {
+                    // Add proper data URI prefix for base64 images
+                    editedImageData = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                  }
+                }
+              }
+
+              // Return the edited image data and text
+              return NextResponse.json({
+                type: "image",
+                content: responseText || "Image edited successfully.",
+                imageData: editedImageData,
+              });
+            } catch (error) {
+              console.error("Error editing image:", error);
+              return NextResponse.json(
+                { error: "Failed to edit image. Please try again." },
+                { status: 500 },
+              );
+            }
+          }
+
+          // Handle image captioning/understanding if requested
+          if (captionImage && imageData && mimeType) {
+            try {
+              const result = await captionImageWithGemini(
+                imageData,
+                mimeType,
+                userMessage,
+              );
+              return NextResponse.json({
+                text: result.text,
+              });
+            } catch (error) {
+              console.error("Error captioning image with Gemini:", error);
+              return NextResponse.json(
+                { error: "Failed to caption image" },
+                { status: 500 },
+              );
+            }
+          }
+
+          // Handle image generation if requested
+          if (generateImage) {
+            try {
+              // Initialize AI client
+              const ai = getServerAIClient();
+
+              // Use the image generation model
+              const imageGenModel = "gemini-2.0-flash-preview-image-generation";
+
+              // Generate image content
+              const response = await ai.models.generateContent({
+                model: imageGenModel,
+                contents: userMessage,
+                config: {
+                  responseModalities: [Modality.TEXT, Modality.IMAGE],
+                },
+              });
+
+              // Extract image data
+              let imageData = null;
+              let responseText = "";
+
+              if (
+                response.candidates &&
+                response.candidates.length > 0 &&
+                response.candidates[0].content &&
+                response.candidates[0].content.parts
+              ) {
+                for (const part of response.candidates[0].content.parts) {
+                  if (part.text) {
+                    responseText += part.text;
+                  } else if (part.inlineData) {
+                    // Add proper data URI prefix for base64 images
+                    imageData = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                  }
+                }
+              }
+
+              // Return the image data and text
+              return NextResponse.json({
+                type: "image",
+                content: responseText || "Image generated successfully.",
+                imageData: imageData,
+              });
+            } catch (error) {
+              console.error("Error generating image:", error);
+              return NextResponse.json(
+                { error: "Failed to generate image. Please try again." },
+                { status: 500 },
+              );
+            }
+          }
+
           // Initialize AI client
           const ai = getServerAIClient();
 
@@ -216,18 +379,6 @@ export async function POST(req: NextRequest) {
             { status: 500 },
           );
         }
-
-      case "openai":
-        return NextResponse.json(
-          { error: ERROR_MESSAGES.PROVIDER_NOT_IMPLEMENTED("OpenAI") },
-          { status: 501 },
-        );
-
-      case "claude":
-        return NextResponse.json(
-          { error: ERROR_MESSAGES.PROVIDER_NOT_IMPLEMENTED("Claude") },
-          { status: 501 },
-        );
 
       default:
         return NextResponse.json(

@@ -1,23 +1,11 @@
 import { AIProvider } from "../lib/types";
 
-/**
- * Configuration for AI providers and models
- * This centralized config file makes it easy to:
- * 1. Add new AI providers
- * 2. Add new models to existing providers
- * 3. Configure model properties and capabilities
- */
-
-// Default API endpoint configurations
 export const API_CONFIG = {
   GEMINI_API_KEY_ENV: "NEXT_PUBLIC_GEMINI_API_KEY",
-  OPENAI_API_KEY_ENV: "NEXT_PUBLIC_OPENAI_API_KEY",
-  CLAUDE_API_KEY_ENV: "NEXT_PUBLIC_CLAUDE_API_KEY",
   DEFAULT_MODEL: "gemini-2.5-flash",
   DEFAULT_PROVIDER: "Google Gemini",
 };
 
-// Error messages
 export const ERROR_MESSAGES = {
   MISSING_API_KEY: (provider: string) =>
     `⚠️ ${provider} API key not configured. Please add your API key to .env.local file.`,
@@ -29,7 +17,6 @@ export const ERROR_MESSAGES = {
   NO_RESPONSE: "I'm sorry, I couldn't generate a response.",
 };
 
-// Model mapping for Gemini
 export const GEMINI_MODEL_MAPPING: Record<string, string> = {
   "gemini-2.5-flash-speed": "gemini-2.5-flash",
   "gemini-2.5-flash": "gemini-2.5-flash",
@@ -37,7 +24,6 @@ export const GEMINI_MODEL_MAPPING: Record<string, string> = {
   default: "gemini-2.5-flash",
 };
 
-// AI Providers and their models
 export const AI_PROVIDERS: AIProvider[] = [
   {
     name: "Google Gemini",
@@ -68,47 +54,8 @@ export const AI_PROVIDERS: AIProvider[] = [
       },
     ],
   },
-  {
-    name: "OpenAI",
-    models: [
-      {
-        id: "gpt-4o",
-        name: "GPT-4o",
-        description: "Latest multimodal model",
-        technicalInfo: "Model: gpt-4o • Context: 128k tokens",
-        provider: "openai",
-      },
-      {
-        id: "gpt-4o-mini",
-        name: "GPT-4o Mini",
-        description: "Fast and cost-effective",
-        technicalInfo: "Model: gpt-4o-mini • Context: 128k tokens",
-        provider: "openai",
-      },
-    ],
-  },
-  {
-    name: "Anthropic Claude",
-    models: [
-      {
-        id: "claude-3-5-sonnet",
-        name: "Claude 3.5 Sonnet",
-        description: "Best balance of intelligence and speed",
-        technicalInfo: "Model: claude-3-5-sonnet • Context: 200k tokens",
-        provider: "claude",
-      },
-      {
-        id: "claude-3-haiku",
-        name: "Claude 3 Haiku",
-        description: "Fastest model for simple tasks",
-        technicalInfo: "Model: claude-3-haiku • Context: 200k tokens",
-        provider: "claude",
-      },
-    ],
-  },
 ];
 
-// UI configuration for the chat interface
 export const UI_CONFIG = {
   THINKING_STYLES: {
     BACKGROUND:
@@ -123,7 +70,6 @@ export const UI_CONFIG = {
   },
 };
 
-// Provider icon mapping (string identifiers instead of React components)
 export const PROVIDER_ICONS = {
   "google gemini": "sparkles",
   openai: "message-square",
@@ -131,7 +77,6 @@ export const PROVIDER_ICONS = {
   default: "brain",
 };
 
-// Model icon mapping (string identifiers instead of React components)
 export const MODEL_ICONS = {
   speed: "zap",
   balanced: "scale",

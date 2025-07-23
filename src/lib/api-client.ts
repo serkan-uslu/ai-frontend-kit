@@ -16,7 +16,6 @@ export async function callAIAPI(
   options: AIResponseOptions = {},
 ): Promise<AIResponse> {
   try {
-    console.log(options.history);
     // Call our secure server-side API
     const response = await fetch("/api/ai", {
       method: "POST",
@@ -29,6 +28,10 @@ export async function callAIAPI(
         modelId: model,
         enableThinking: options.thinkingEnabled,
         history: options.history || [],
+        generateImage: options.generateImage || false,
+        editImage: options.editImage || false,
+        imageData: options.imageData || null,
+        mimeType: options.mimeType || null,
       }),
     });
 
@@ -114,8 +117,19 @@ export async function callAIAPI(
         tokenCount: finalTokenCount,
       };
     } else {
-      // Handle regular JSON response (fallback)
+      // Handle regular JSON response (fallback or image generation)
       const data = await response.json();
+
+      // Check if this is an image response
+      if (data.type === "image") {
+        return {
+          text: data.content || "Image generated successfully.",
+          imageData: data.imageData,
+          isImage: true,
+        };
+      }
+
+      // Regular text response
       return {
         text: data.text || ERROR_MESSAGES.NO_RESPONSE,
         thinking: data.thinking,

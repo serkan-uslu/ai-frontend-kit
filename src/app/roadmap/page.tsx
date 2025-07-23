@@ -7,7 +7,22 @@ const roadmapData = {
     {
       title: "Google Gemini API Integration",
       description:
-        "Complete integration with Gemini API including streaming responses and thinking mode.",
+        "Complete integration with Gemini API including streaming responses, thinking mode, and image generation.",
+    },
+    {
+      title: "Image Generation",
+      description:
+        "Implemented AI image generation capabilities using Google Gemini models with a dedicated image button in the chat interface.",
+    },
+    {
+      title: "Video Generation",
+      description:
+        "Implemented AI-powered video generation features with seamless integration into the chat interface.",
+    },
+    {
+      title: "Image Editing",
+      description:
+        "Implemented AI-powered image editing capabilities allowing users to upload images and transform them using text instructions with Google Gemini.",
     },
     {
       title: "Chat History Support",
@@ -47,14 +62,6 @@ const roadmapData = {
     },
   ],
   inProgress: [
-    {
-      title: "Image Generation",
-      description: "Adding support for AI image generation capabilities.",
-    },
-    {
-      title: "Video Generation",
-      description: "Implementing AI-powered video generation features.",
-    },
     {
       title: "Speech Generation",
       description: "Adding text-to-speech capabilities for voice output.",

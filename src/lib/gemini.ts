@@ -1,26 +1,13 @@
+import { GoogleGenAI } from "@google/genai";
 import {
   AIResponse,
   ThinkingCallback,
   AIResponseOptions,
   ChatHistoryEntry,
+  GeminiResponse,
 } from "./types";
 import { API_CONFIG, ERROR_MESSAGES } from "@/config/ai-config";
 import { callAIAPI } from "./api-client";
-
-/**
- * Legacy compatibility layer for the AI client
- * Now uses the secure API client instead of direct AI service access
- */
-
-// No longer needed as we're using the API client
-// This is kept as a comment for reference
-const getAIClient = () => {
-  throw new Error("This function should not be called anymore");
-};
-
-// Model mapping is now handled server-side
-// This is kept as a comment for reference
-// const getGeminiModelName = (modelId: string): string => {};
 
 /**
  * Gemini specific response generation using the secure API client
@@ -99,6 +86,117 @@ export async function generateChatResponse(
   return generateAIResponse(userMessage, "gemini", API_CONFIG.DEFAULT_MODEL, {
     thinkingEnabled: enableThinking,
   });
+}
+
+/**
+ * Generate an image using Gemini
+ * @param prompt - The prompt to generate an image from
+ * @returns Promise<AIResponse> with image data and text
+ */
+export async function generateGeminiImage(prompt: string): Promise<AIResponse> {
+  try {
+    // Call the secure API client with image generation flag
+    const response = await callAIAPI(prompt, "gemini", "gemini-pro-vision", {
+      generateImage: true,
+    });
+
+    return {
+      ...response,
+      isImage: true,
+    };
+  } catch (error) {
+    console.error("Error generating image with Gemini:", error);
+    return {
+      text: ERROR_MESSAGES.GENERAL_ERROR,
+      error: "image_generation_error",
+    };
+  }
+}
+
+/**
+ * Edit an image using Gemini with text prompt and existing image
+ * @param prompt - The text prompt describing the desired edit
+ * @param imageData - Base64 encoded image data
+ * @param mimeType - MIME type of the image (e.g., image/png, image/jpeg)
+ * @returns Promise<AIResponse> with edited image data and text
+ */
+export async function editImageWithGemini(
+  prompt: string,
+  imageData: string,
+  mimeType: string = "image/jpeg",
+): Promise<AIResponse> {
+  try {
+    // Call the secure API client with image editing flag
+    const response = await callAIAPI(
+      prompt,
+      "gemini",
+      "gemini-2.0-flash-preview-image-generation",
+      {
+        editImage: true,
+        imageData,
+        mimeType,
+      },
+    );
+
+    return {
+      ...response,
+      isImage: true,
+    };
+  } catch (error) {
+    console.error("Error editing image with Gemini:", error);
+    return {
+      text: ERROR_MESSAGES.GENERAL_ERROR,
+      error: "image_editing_error",
+    };
+  }
+}
+
+/**
+ * Caption an image using Gemini with text prompt and existing image
+ * @param imageData - Base64 encoded image data
+ * @param mimeType - MIME type of the image (e.g., image/png, image/jpeg)
+ * @param prompt - The text prompt describing the desired caption
+ * @returns Promise<AIResponse> with captioned image data and text
+ */
+export async function captionImageWithGemini(
+  imageData: string,
+  mimeType: string,
+  prompt: string = "Caption this image.",
+): Promise<GeminiResponse> {
+  try {
+    const genAI = new GoogleGenAI({
+      apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || "",
+    });
+
+    // Remove data URI prefix if present (e.g., data:image/png;base64,)
+    let cleanImageData = imageData;
+    if (imageData.includes("base64,")) {
+      cleanImageData = imageData.split("base64,")[1];
+    }
+
+    const contents = [
+      {
+        inlineData: {
+          mimeType: mimeType,
+          data: cleanImageData,
+        },
+      },
+      { text: prompt },
+    ];
+
+    const result = await genAI.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: contents,
+    });
+
+    return {
+      text: result.text || "",
+      imageData: undefined,
+    };
+  } catch (error) {
+    console.error("Error captioning image with Gemini:", error);
+    throw error;
+  }
 }
 
 /**

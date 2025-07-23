@@ -11,6 +11,7 @@ A modern, responsive AI chat interface built with Next.js, TypeScript, and Tailw
 ## Features
 
 - 🤖 **AI Integration**: Built-in support for Google Gemini AI with an extensible architecture for other AI providers
+- 🖼️ **Image Generation & Editing**: Create and edit images using Google Gemini's AI capabilities with text prompts
 - 🎨 **Dark/Light Mode**: Fully implemented theme switching with system preference detection
 - 📱 **Responsive Design**: Mobile-first approach ensuring great UX across all device sizes
 - 🔄 **Real-time Thinking**: Display AI thinking process in real-time before the final answer
@@ -70,7 +71,7 @@ NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ai-frontend-kit.git
+git clone https://github.com/serkan-uslu/ai-frontend-kit.git
 cd ai-frontend-kit
 
 # Install dependencies

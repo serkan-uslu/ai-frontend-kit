@@ -1,6 +1,15 @@
 import { FeatureItem } from "@/components/features/feature-item";
 import { BackButton } from "@/components/ui/back-button";
-import { Brain, MessageSquare, Palette, Sparkles, Zap } from "lucide-react";
+import {
+  Brain,
+  Edit,
+  Image,
+  MessageSquare,
+  Palette,
+  Sparkles,
+  Video,
+  Zap,
+} from "lucide-react";
 
 // Features data structure
 const featuresData = [
@@ -51,6 +60,30 @@ const featuresData = [
     icon: <Palette />,
     iconBgColor: "bg-indigo-100 dark:bg-indigo-900/30",
     iconColor: "text-indigo-600 dark:text-indigo-400",
+  },
+  {
+    title: "Image Generation",
+    description:
+      "Generate AI-powered images directly in the chat interface with a dedicated image button. Supports text-to-image generation using Google Gemini.",
+    icon: <Image aria-hidden="true" />,
+    iconBgColor: "bg-pink-100 dark:bg-pink-900/30",
+    iconColor: "text-pink-600 dark:text-pink-400",
+  },
+  {
+    title: "Video Generation",
+    description:
+      "Create AI-generated videos based on text prompts. Seamlessly integrated into the chat interface for a smooth user experience.",
+    icon: <Video aria-hidden="true" />,
+    iconBgColor: "bg-orange-100 dark:bg-orange-900/30",
+    iconColor: "text-orange-600 dark:text-orange-400",
+  },
+  {
+    title: "Image Editing",
+    description:
+      "Edit and transform images using AI with text instructions. Upload any image and describe how you want it modified for powerful image-to-image transformations powered by Google Gemini.",
+    icon: <Edit aria-hidden="true" />,
+    iconBgColor: "bg-violet-100 dark:bg-violet-900/30",
+    iconColor: "text-violet-600 dark:text-violet-400",
   },
 ];
 

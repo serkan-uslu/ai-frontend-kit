@@ -3,8 +3,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Bot, User, ChevronDown, ChevronUp } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Bot, ChevronDown, ChevronUp, Download, User } from "lucide-react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 interface ChatMessageProps {
@@ -14,6 +14,8 @@ interface ChatMessageProps {
   isThinking?: boolean;
   finalAnswer?: string;
   tokenCount?: number;
+  imageData?: string;
+  isImage?: boolean;
 }
 
 export function ChatMessage({
@@ -23,6 +25,8 @@ export function ChatMessage({
   isThinking = false,
   finalAnswer,
   tokenCount,
+  imageData,
+  isImage = false,
 }: ChatMessageProps) {
   // Always start collapsed if there's a final answer
   const [isCollapsed, setIsCollapsed] = useState(!!finalAnswer);
@@ -103,7 +107,28 @@ export function ChatMessage({
             ) : (
               !isThinking && (
                 <div className="text-sm">
-                  <ReactMarkdown>{message}</ReactMarkdown>
+                  {isImage && imageData ? (
+                    <div className="flex flex-col gap-2">
+                      <ReactMarkdown>{message}</ReactMarkdown>
+                      <div className="relative rounded-md overflow-hidden border border-muted-foreground/20">
+                        <img
+                          src={imageData}
+                          alt="Generated image"
+                          className="w-full h-auto object-contain max-h-[400px]"
+                        />
+                        <a
+                          href={imageData}
+                          download="gemini-generated-image.png"
+                          className="absolute bottom-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                          title="Download image"
+                        >
+                          <Download size={16} />
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <ReactMarkdown>{message}</ReactMarkdown>
+                  )}
                 </div>
               )
             )}

@@ -28,6 +28,16 @@ export interface AIResponse {
   thinking?: string;
   error?: string;
   tokenCount?: number;
+  imageData?: string; // Base64 encoded image data
+  isImage?: boolean; // Flag to indicate if this is an image response
+}
+
+/**
+ * Gemini specific response type
+ */
+export interface GeminiResponse {
+  text: string;
+  imageData?: string; // Base64 encoded image data
 }
 
 /**
@@ -46,6 +56,8 @@ export interface Message {
   isThinking?: boolean;
   finalAnswer?: string;
   tokenCount?: number;
+  imageData?: string; // Base64 encoded image data
+  isImage?: boolean; // Flag to indicate if this is an image message
 }
 
 /**
@@ -65,6 +77,11 @@ export interface AIResponseOptions {
   temperature?: number;
   maxTokens?: number;
   history?: ChatHistoryEntry[];
+  generateImage?: boolean; // Flag to indicate if this is an image generation request
+  editImage?: boolean; // Flag to indicate if this is an image editing request
+  captionImage?: boolean; // Flag to indicate if this is an image captioning request
+  imageData?: string; // Base64 encoded image data for image editing/captioning
+  mimeType?: string; // MIME type of the image for image editing/captioning
 }
 
 /**

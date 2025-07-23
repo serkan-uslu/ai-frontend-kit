@@ -1,9 +1,8 @@
 "use client";
 
-// import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChatMessage } from "./chat-message";
-import { useEffect, useRef } from "react";
 import { Message } from "@/lib/types";
+import { useEffect, useRef } from "react";
+import { ChatMessage } from "./chat-message";
 
 interface ChatMessageAreaProps {
   messages: Message[];
@@ -74,6 +73,8 @@ export function ChatMessageArea({
                 isThinking={message.isThinking}
                 finalAnswer={message.finalAnswer}
                 tokenCount={message.tokenCount}
+                imageData={message.imageData}
+                isImage={message.isImage}
               />
             ))}
             {isLoading && <TypingIndicator />}
